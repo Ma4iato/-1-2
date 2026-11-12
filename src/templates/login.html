@@ -1,14 +1,16 @@
-
 <!doctype html>
 <html>
   <head><meta charset="utf-8"><title>Login</title></head>
   <body>
     <h1>Login</h1>
-    {% if error %}<p style="color:red">{{ error }}</p>{% endif %}
-    <form method="post">
-      <label>Username <input name="username"></label><br>
-      <label>Password <input name="password" type="password"></label><br>
+    {% if error %}<p role="alert"><strong>{{ error }}</strong></p>{% endif %}
+    <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+    <form method="post" action="/login">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Username <input name="username" autocomplete="username" required></label><br>
+      <label>Password <input name="password" type="password" autocomplete="current-password" required></label><br>
       <button type="submit">Log in</button>
     </form>
+    <a href="/">Home</a>
   </body>
 </html>

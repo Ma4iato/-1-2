@@ -23,14 +23,22 @@ make zap
 - **Informational:** загальні відомості про технологічний стек та відповіді.
 
 ## 3. Результати сканування (Baseline — до виправлень)
-> Заповнюється за даними артефакту `zap-report` (`report_md.md` / `report_html.html`) після запуску `.github/workflows/dast.yml`.
 
-- **Посилання на запуск CI:** *[очікується після push у GitHub]*
-- **Зведена таблиця знахідок ZAP:**
+- **Посилання на запуск CI:** [DAST (ZAP Baseline) Run #1 (`63269f9`)](https://github.com/Ma4iato/-1-2/actions/runs/43230706836)
+- **Зведена статистика (за `zap-report/report_md.md`):** High: **0**, Medium: **4**, Low: **6**, Informational: **8** (проскановано 6 ендпоінтів: 75% відповідей `2xx`, 25% `4xx`).
 
-| Рівень критичності | Назва проблеми (Alert) | Кількість URL | Короткий опис та вплив | Пов'язана вимога / Ризик |
+| Рівень критичності | Назва проблеми (Alert) | Кількість екземплярів | Короткий опис та вплив | Пов'язана вимога / Ризик |
 |---|---|---|---|---|
-| *Очікується* | — | — | — | — |
+| **Medium** | `Source Code Disclosure - SQL` (CWE-540) | 1 (`/search?q=test`) | Розкриття фрагмента SQL-запиту `SELECT id, title, body FROM posts WHERE title LIKE` безпосередньо в HTML-відповіді | `VAL-1` / `R1` |
+| **Medium** | `Absence of Anti-CSRF Tokens` (CWE-352) | 2 (`/login` GET/POST) | Форма входу не містить анти-CSRF токена | `SESS-1` / `R5` |
+| **Medium** | `Content Security Policy (CSP) Header Not Set` (CWE-693) | Systemic | Відсутній заголовок CSP, що полегшує експлуатацію XSS | `SESS-1` / `R2`, `R5` |
+| **Medium** | `Missing Anti-clickjacking Header` (CWE-1021) | 5 | Відсутні `X-Frame-Options` / `frame-ancestors` у CSP | `SESS-1` / `R5` |
+| **Low** | `X-Content-Type-Options Header Missing` (CWE-693) | 5 | Браузер може виконувати MIME-sniffing | `SESS-1` / `R5` |
+| **Low** | `Server Leaks Version Information via "Server"` | Systemic | Заголовок `Server` розкриває `Werkzeug/3.1.9 Python/3.11.18` | `CONF-1` / `R4` |
+| **Low** | `Cross-Origin-Embedder/Opener/Resource-Policy` та `Permissions-Policy` відсутні | 3 / Systemic | Відсутні сучасні заголовки браузерної ізоляції | `SESS-1` / `R5` |
+| **Info** | `User Controllable HTML Element Attribute (Potential XSS)` | 1 (`/echo`) | Користувацький параметр `msg` віддзеркалюється у відповіді | `VAL-1` / `R2` |
+
+> **Аналітична примітка:** `OWASP ZAP Baseline` виконує пасивний аналіз трафіку після павука (без активного фаззингу XSS/SQLi-векторів), тому Reflected XSS у `/echo` та SQLi у `/search` проявилися тут як `Potential XSS` (Info) і `Source Code Disclosure - SQL` (Medium), тоді як SAST (`Semgrep` і `Bandit`) впевнено класифікували їх як `Critical/High`. Це підтверджує необхідність комбінування SAST + DAST у SDLC.
 
 ## 4. Результати контрольного сканування (після виправлень)
 > Заповнюється після застосування виправлень безпеки у Pull Request для підтвердження закриття або зниження ризиків.

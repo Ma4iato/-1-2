@@ -1,10 +1,14 @@
-
 <!doctype html>
 <html>
   <head><meta charset="utf-8"><title>Profile</title></head>
   <body>
     <h1>Profile</h1>
     <p>User: {{ user["username"] }}</p>
+    <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+    <form method="post" action="/logout">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">Log out</button>
+    </form>
     <a href="/">Home</a>
   </body>
 </html>

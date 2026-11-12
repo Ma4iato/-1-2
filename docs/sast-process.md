@@ -44,7 +44,14 @@
   `Open` (Issue створено) → `In Progress` (створено гілку `fix/issue-<N>-...`) → `In Review` (відкрито Pull Request із ключовим словом `Closes #<N>` та пройдено CI SAST/DAST) → `Verified / Closed` (PR злито, повторний звіт підтвердив відсутність знахідки, статус у `risk-register.csv` оновлено на `Closed`).
 
 ## 5. Результати первинного сканування SAST (Baseline)
-> Цей розділ заповнюється після першого запуску конвеєра `.github/workflows/sast.yml` на базовій (уразливій) версії коду.
 
-- **Посилання на запуск CI:** *[очікується після push у GitHub]*
-- **Виявлені вразливості та створені Issues:** *[очікується після аналізу `sast-reports`]*
+- **Посилання на запуск CI:** [SAST Run #1 (`63269f9`)](https://github.com/Ma4iato/-1-2/actions/runs/43230706894)
+- **Артефакти:** `sast-reports` (`semgrep.sarif`, `semgrep.txt`, `bandit.txt`, `pip-audit.json`, `pip-audit.md`)
+
+| Інструмент | Знайдено | Основні знахідки | Прив'язка до ризику / задачі |
+|---|---|---|---|
+| **Semgrep** | 23 | `flask-sqli-fstring` (`src/app.py:32-33`), `raw-html-concat` / `directly-returned-format-string` (`src/app.py:24`), `flask-weak-hardcoded-secret` (`src/app.py:7`), `flask-debug-enabled` (`src/app.py:63`), `dockerfile.security.missing-user` (`Dockerfile:9`), `django-no-csrf-token` (`login.html:8`), mutable action tags (`.github/workflows/*.yml`) | `R1`, `R2`, `R4`, `R5`, `SEC-1..SEC-5` |
+| **Bandit** | 3 (1 High, 2 Medium) | `B201: flask_debug_true` (`src/app.py:63`), `B608: hardcoded_sql_expressions` (`src/app.py:32`), `B104: hardcoded_bind_all_interfaces` (`src/app.py:63`) | `R1`, `R4` |
+| **pip-audit** | 8 записів (1 у `requirements.txt`) | `flask==3.0.3` → `PYSEC-2026-2151` (оновити до `3.1.3`); решта (`mcp`, `opentelemetry-api`, `setuptools`) — пакети середовища CI-раннера | `R6` |
+
+> **Примітка щодо тріажу:** у першому запуску `pip-audit` сканував усе Python-середовище після встановлення `semgrep`/`bandit`, тому до звіту потрапили транзитивні залежності інструментів CI (`mcp`, `opentelemetry-api`). У гілці виправлень команду оновлено на `pip-audit -r requirements.txt` для точного аудиту саме залежностей застосунку.

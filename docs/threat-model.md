@@ -89,5 +89,9 @@ flowchart LR
 - [x] **R2 (XSS):** підтверджено у `src/app.py:24` — повернення f-рядка `<p>{msg}</p>` без екранування.
 - [x] **R3 (Weak Auth & Plaintext):** підтверджено у `src/db.py:14, 21-23` та `src/app.py:45` — паролі в plaintext, відсутні rate limiting і аудит.
 - [x] **R4 (Hardcoded Secret & Debug):** підтверджено у `src/app.py:7, 63`, `Dockerfile:8`, `docker-compose.yml:8`.
-- [ ] **Результати автоматизованого прогону SAST (Semgrep / Bandit / pip-audit) в CI:** *[очікується після першого запуску `.github/workflows/sast.yml`]*.
-- [ ] **Результати автоматизованого прогону DAST (OWASP ZAP Baseline) в CI:** *[очікується після першого запуску `.github/workflows/dast.yml`]*.
+- [x] **Результати автоматизованого прогону SAST (Semgrep / Bandit / pip-audit) в CI (Run [`43230706894`](https://github.com/Ma4iato/-1-2/actions/runs/43230706894)):**
+  - **Semgrep:** виявлено **23 знахідки** (зокрема кастомні `flask-sqli-fstring`, `flask-weak-hardcoded-secret`, `flask-debug-enabled`, а також `raw-html-concat` / XSS у `src/app.py:24`, `missing-user` у `Dockerfile:9`, `django-no-csrf-token` у `src/templates/login.html:8`, мутабельні теги у workflows).
+  - **Bandit:** виявлено **3 знахідки** (1 High — `B201: flask_debug_true` у `src/app.py:63`; 2 Medium — `B608: hardcoded_sql_expressions` у `src/app.py:32` та `B104: hardcoded_bind_all_interfaces` у `src/app.py:63`).
+  - **pip-audit:** виявлено вразливість у залежності застосунку **`flask 3.0.3`** (`PYSEC-2026-2151`, виправлення у `3.1.3`), а також пакетів середовища CI (`mcp`, `opentelemetry-api`, `setuptools`).
+- [x] **Результати автоматизованого прогону DAST (OWASP ZAP Baseline) в CI (Run [`43230706836`](https://github.com/Ma4iato/-1-2/actions/runs/43230706836)):**
+  - Виявлено **18 типів сповіщень** (High: `0`, Medium: `4`, Low: `6`, Informational: `8`), серед яких критично значущі: `Source Code Disclosure - SQL` (Medium, витік SQL-запиту на `/search?q=test`), `Absence of Anti-CSRF Tokens` (Medium, `/login`), `Content Security Policy (CSP) Header Not Set` (Medium), `Missing Anti-clickjacking Header` (Medium), а також розкриття версії сервера `Werkzeug/3.1.9 Python/3.11.18` (Low) та індикатор `User Controllable HTML Element Attribute (Potential XSS)` на `/echo` (Informational).
