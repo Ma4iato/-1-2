@@ -1,0 +1,59 @@
+rules:
+  - id: flask-sqli-fstring
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $SQL = f"...{$VAR}..."
+              ...
+              $CUR.execute($SQL)
+          - pattern: |
+              $CUR.execute(f"...{$VAR}...")
+    message: >
+      Можлива SQL-ін'єкція: SQL-запит формується через f-рядок із користувацьким вводом.
+      Використовуйте параметризовані запити (placeholders `?`).
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-89: Improper Neutralization of Special Elements used in an SQL Command"
+      owasp: "A03:2021 - Injection"
+
+  - id: flask-reflected-xss-fstring
+    patterns:
+      - pattern-inside: |
+          @app.route(...)
+          def $FUNC(...):
+              ...
+      - pattern: return f"...<...{$VAR}...>..."
+    message: >
+      Можливий Reflected XSS: HTML формується безпосередньо в f-рядку без екранування.
+      Використовуйте render_template() або markupsafe.escape().
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      owasp: "A03:2021 - Injection"
+
+  - id: flask-weak-hardcoded-secret
+    patterns:
+      - pattern-either:
+          - pattern: app.secret_key = "..."
+          - pattern: app.secret_key = os.environ.get($KEY, "...")
+    message: >
+      Слабкий або захардкоджений секретний ключ Flask (fallback у коді).
+      Генеруйте випадковий ключ або вимагайте обов'язкову змінну середовища без дефолту.
+    languages: [python]
+    severity: WARNING
+    metadata:
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A07:2021 - Identification and Authentication Failures"
+
+  - id: flask-debug-enabled
+    pattern: app.run(..., debug=True, ...)
+    message: >
+      Увімкнено debug=True у Flask. У продакшені це дозволяє віддалене виконання коду
+      через інтерактивний відладчик Werkzeug та розкриває трасування стеку.
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-489: Active Debug Code"
+      owasp: "A05:2021 - Security Misconfiguration"
